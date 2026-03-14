@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import StatusTable from '../../components/Tables/StatusTable';
 import { SkeletonTable } from '../../components/Loading/Skeletons';
-import { schemes } from '../../data/dummyData';
+import api from '../../utils/api';
 import { Plus } from 'lucide-react';
 import './Schemes.css';
 
@@ -9,14 +9,28 @@ const Schemes = ({ role, searchTerm = '' }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Simulate network load
     useEffect(() => {
-        setIsLoading(true);
-        const timer = setTimeout(() => {
-            setData(schemes);
-            setIsLoading(false);
-        }, 600);
-        return () => clearTimeout(timer);
+        const fetchSchemes = async () => {
+            setIsLoading(true);
+            try {
+                const { data } = await api.get('/schemes');
+                // Map backend fields to UI keys
+                const mappedData = data.map(s => ({
+                    ...s,
+                    id: s._id.slice(-6).toUpperCase(), // Short ID for display
+                    name: s.schemeName,
+                    budget: `₹${(s.budget / 10000000).toFixed(2)} Cr`,
+                    beneficiariesCount: Math.floor(Math.random() * 5000) + 1000 // Placeholder for now
+                }));
+                setData(mappedData);
+            } catch (error) {
+                console.error("Error fetching schemes:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSchemes();
     }, []);
 
     const columns = [
@@ -32,13 +46,12 @@ const Schemes = ({ role, searchTerm = '' }) => {
     const getFilteredData = () => {
         let filtered = data;
 
-        // Global Search Filter
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             filtered = filtered.filter(app =>
                 app.name.toLowerCase().includes(term) ||
                 app.district.toLowerCase().includes(term) ||
-                app.id.toString().includes(term)
+                app.id.includes(term)
             );
         }
 
@@ -46,7 +59,11 @@ const Schemes = ({ role, searchTerm = '' }) => {
     };
 
     const handleActionClick = (row) => {
-        alert(`Showing details for Scheme: ${row.name}`);
+        alert(`Details for ${row.name}:\n${row.description}`);
+    };
+
+    const handleAddScheme = () => {
+        alert("The backend is ready to accept POST /api/schemes. In a real scenario, this would open a form modal.");
     };
 
     return (
@@ -58,7 +75,7 @@ const Schemes = ({ role, searchTerm = '' }) => {
                 </div>
 
                 {role === 'admin' && (
-                    <button className="btn-primary animate-fade-in">
+                    <button className="btn-primary animate-fade-in" onClick={handleAddScheme}>
                         <Plus size={18} /> New Scheme
                     </button>
                 )}

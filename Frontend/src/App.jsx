@@ -8,19 +8,24 @@ import Schemes from './pages/Schemes/Schemes';
 import Applications from './pages/Applications/Applications';
 import Districts from './pages/Districts/Districts';
 import Reports from './pages/Reports/Reports';
+import { useAuth } from './context/AuthContext';
 import './index.css';
 
 // Protective Layout Wrapper
-const PortalLayout = ({ role, username, onLogout, onSearchItem, children }) => {
-  if (!role) {
+const PortalLayout = ({ user, logout, onSearchItem, children }) => {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // Normalize backend roles to UI roles for navigation if necessary
+  const uiRole = user.role === 'district_officer' ? 'district' :
+    user.role === 'field_officer' ? 'field' : 'admin';
+
   return (
     <div className="app-container">
-      <Sidebar role={role} onLogout={onLogout} />
+      <Sidebar role={uiRole} onLogout={logout} />
       <main className="main-content">
-        <Navbar role={role} username={username} onSearchItem={onSearchItem} />
+        <Navbar role={uiRole} username={user.name} onSearchItem={onSearchItem} />
         <div className="page-content" id="scrollable-content">
           {children}
         </div>
@@ -40,34 +45,26 @@ const ScrollToTop = () => {
 };
 
 const App = () => {
-  const [role, setRole] = useState(null);
-  const [username, setUsername] = useState('');
+  const { user, logout, loading } = useAuth();
   const [globalSearch, setGlobalSearch] = useState('');
 
-  const handleLogin = (selectedRole, name) => {
-    setRole(selectedRole);
-    setUsername(name);
-  };
-
-  const handleLogout = () => {
-    setRole(null);
-    setUsername('');
-    setGlobalSearch('');
-  };
+  if (loading) {
+    return <div className="loading-screen">Authenticating Session...</div>;
+  }
 
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
         <Route path="/login" element={
-          role ? <Navigate to={`/${role}/dashboard`} replace /> : <Login onLogin={handleLogin} />
+          user ? <Navigate to={`/${user.role === 'district_officer' ? 'district' : user.role === 'field_officer' ? 'field' : 'admin'}/dashboard`} replace /> : <Login />
         } />
 
         {/* Admin Routes */}
         <Route path="/admin/*" element={
-          <PortalLayout role={role} username={username} onLogout={handleLogout} onSearchItem={setGlobalSearch}>
+          <PortalLayout user={user} logout={logout} onSearchItem={setGlobalSearch}>
             <Routes>
-              <Route path="dashboard" element={<Dashboard role="admin" username={username} />} />
+              <Route path="dashboard" element={<Dashboard role="admin" username={user?.name} />} />
               <Route path="schemes" element={<Schemes role="admin" searchTerm={globalSearch} />} />
               <Route path="applications" element={<Applications role="admin" searchTerm={globalSearch} />} />
               <Route path="districts" element={<Districts role="admin" />} />
@@ -79,9 +76,9 @@ const App = () => {
 
         {/* District Officer Routes */}
         <Route path="/district/*" element={
-          <PortalLayout role={role} username={username} onLogout={handleLogout} onSearchItem={setGlobalSearch}>
+          <PortalLayout user={user} logout={logout} onSearchItem={setGlobalSearch}>
             <Routes>
-              <Route path="dashboard" element={<Dashboard role="district" username={username} />} />
+              <Route path="dashboard" element={<Dashboard role="district" username={user?.name} />} />
               <Route path="schemes" element={<Schemes role="district" searchTerm={globalSearch} />} />
               <Route path="applications" element={<Applications role="district" searchTerm={globalSearch} />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
@@ -91,9 +88,9 @@ const App = () => {
 
         {/* Field Officer Routes */}
         <Route path="/field/*" element={
-          <PortalLayout role={role} username={username} onLogout={handleLogout} onSearchItem={setGlobalSearch}>
+          <PortalLayout user={user} logout={logout} onSearchItem={setGlobalSearch}>
             <Routes>
-              <Route path="dashboard" element={<Dashboard role="field" username={username} />} />
+              <Route path="dashboard" element={<Dashboard role="field" username={user?.name} />} />
               <Route path="schemes" element={<Schemes role="field" searchTerm={globalSearch} />} />
               <Route path="applications" element={<Applications role="field" searchTerm={globalSearch} />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
@@ -102,7 +99,9 @@ const App = () => {
         } />
 
         {/* Root Redirect Catch-all */}
-        <Route path="/" element={<Navigate to={role ? `/${role}/dashboard` : "/login"} replace />} />
+        <Route path="/" element={
+          <Navigate to={user ? `/${user.role === 'district_officer' ? 'district' : user.role === 'field_officer' ? 'field' : 'admin'}/dashboard` : "/login"} replace />
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

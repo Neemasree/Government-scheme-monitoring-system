@@ -2,46 +2,36 @@ import { useState, useEffect } from 'react';
 import DashboardCards from '../../components/DashboardCards/DashboardCards';
 import { BarGraph, PieGraph, LineGraph } from '../../components/Charts/SchemeCharts';
 import { SkeletonChart } from '../../components/Loading/Skeletons';
-import { districtPerformance, applications, schemes } from '../../data/dummyData';
+import api from '../../utils/api';
 import './Dashboard.css';
 
 const Dashboard = ({ role, username }) => {
     const [isLoading, setIsLoading] = useState(true);
+    const [stats, setStats] = useState(null);
+    const [analytics, setAnalytics] = useState({ statusData: [], schemeData: [] });
 
-    // Simulate network load
     useEffect(() => {
-        setIsLoading(true);
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1000);
-        return () => clearTimeout(timer);
+        const fetchDashboardData = async () => {
+            setIsLoading(true);
+            try {
+                const [statsRes, analyticsRes] = await Promise.all([
+                    api.get('/dashboard/stats'),
+                    api.get('/dashboard/analytics')
+                ]);
+
+                setStats(statsRes.data);
+                setAnalytics(analyticsRes.data);
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDashboardData();
     }, []);
 
-    // 1. Map Approval Rate / Status Distribution
-    const statusCounts = applications.reduce((acc, app) => {
-        const status = app.status.includes('Approved') ? 'Approved' :
-            app.status.includes('Rejected') ? 'Rejected' : 'Pending';
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-    }, {});
-    const statusData = Object.keys(statusCounts).map(key => ({ name: key, value: statusCounts[key] }));
-
-    // 2. Map Scheme Distribution
-    const schemeCounts = applications.reduce((acc, app) => {
-        const sName = app.scheme.replace(' Scheme', '').replace(' Fund', ''); // Shorten names for chart
-        acc[sName] = (acc[sName] || 0) + 1;
-        return acc;
-    }, {});
-    const schemeDistData = Object.keys(schemeCounts).map(key => ({ name: key, value: schemeCounts[key] }));
-
-    // 3. Map District Performance 
-    const districtData = districtPerformance.map(d => ({
-        district: d.district,
-        total: d.totalApplications,
-        approved: d.approved
-    }));
-
-    // 4. Trend Data (Static for demo)
+    // Trend Data (Demo data - remains same or could be fetched)
     const trendData = [
         { month: 'Jan', applications: 120 },
         { month: 'Feb', applications: 250 },
@@ -51,11 +41,18 @@ const Dashboard = ({ role, username }) => {
         { month: 'Jun', applications: 390 },
     ];
 
-    // Role specific greetings
+    // District Data (Demo placeholder)
+    const districtData = [
+        { district: 'Chennai', total: 450, approved: 380 },
+        { district: 'Salem', total: 320, approved: 210 },
+        { district: 'Madurai', total: 290, approved: 240 },
+        { district: 'Trichy', total: 210, approved: 150 },
+    ];
+
     const greeting = {
-        admin: `Welcome back Administrator ${username}. Here's the state overview.`,
-        district: `Welcome ${username}. Here are the metrics for your district.`,
-        field: `Hello Officer ${username}. You have pending verifications today.`
+        admin: `Welcome Administrator ${username}. System metrics are live.`,
+        district: `Welcome ${username}. District metrics are synchronized.`,
+        field: `Hello ${username}. Local application flow is monitored.`
     };
 
     return (
@@ -65,10 +62,10 @@ const Dashboard = ({ role, username }) => {
                 <p className="page-subtitle">{greeting[role] || greeting.field}</p>
             </div>
 
-            <DashboardCards role={role} isLoading={isLoading} />
+            <DashboardCards role={role} isLoading={isLoading} stats={stats} />
 
             <div className="charts-grid animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                {/* Row 1: District Performance */}
+                {/* District Performance */}
                 <div className="chart-span-2">
                     {isLoading ? <SkeletonChart /> : (
                         <BarGraph
@@ -80,7 +77,7 @@ const Dashboard = ({ role, username }) => {
                     )}
                 </div>
 
-                {/* Row 2: Monthly Trends */}
+                {/* Monthly Trends */}
                 <div className="chart-span-2">
                     {isLoading ? <SkeletonChart /> : (
                         <LineGraph
@@ -92,12 +89,12 @@ const Dashboard = ({ role, username }) => {
                     )}
                 </div>
 
-                {/* Row 3: Splits */}
+                {/* Analytics Distribution */}
                 <div className="chart-item">
                     {isLoading ? <SkeletonChart /> : (
                         <PieGraph
-                            data={statusData}
-                            title="Approval Rate Distribution"
+                            data={analytics.statusData}
+                            title="Application Status Distribution"
                         />
                     )}
                 </div>
@@ -105,8 +102,8 @@ const Dashboard = ({ role, username }) => {
                 <div className="chart-item">
                     {isLoading ? <SkeletonChart /> : (
                         <PieGraph
-                            data={schemeDistData}
-                            title="Applications by Scheme"
+                            data={analytics.schemeData}
+                            title="Applications by Scheme Type"
                         />
                     )}
                 </div>

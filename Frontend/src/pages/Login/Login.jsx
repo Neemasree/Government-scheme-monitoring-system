@@ -1,31 +1,50 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Shield, Map, CheckSquare } from 'lucide-react';
+import api from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
+import { Shield, Map, CheckSquare, Loader2 } from 'lucide-react';
 import './Login.css';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
     const [selectedRole, setSelectedRole] = useState(null);
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const navigate = useNavigate();
+    const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const { login } = useAuth();
 
     const roles = [
         { id: 'admin', title: 'System Admin', icon: <Shield size={32} />, desc: 'Full system access & final approvals' },
-        { id: 'district', title: 'District Officer', icon: <Map size={32} />, desc: 'Review & forward applications' },
-        { id: 'field', title: 'Field Officer', icon: <CheckSquare size={32} />, desc: 'Verify on-ground applications' },
+        { id: 'district_officer', title: 'District Officer', icon: <Map size={32} />, desc: 'Review & forward applications' },
+        { id: 'field_officer', title: 'Field Officer', icon: <CheckSquare size={32} />, desc: 'Verify on-ground applications' },
     ];
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
+        setError('');
+
         if (!selectedRole) {
-            alert("Please select a role to login.");
+            setError("Please select a role to login.");
             return;
         }
 
-        // Simulate login
-        const userNameDisplay = username || `Demo ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`;
-        onLogin(selectedRole, userNameDisplay);
-        navigate(`/${selectedRole}/dashboard`);
+        setIsSubmitting(true);
+        try {
+            const { data } = await api.post('/auth/login', { email, password });
+
+            // Check if returned user role matches selected role
+            if (data.role !== selectedRole) {
+                setError(`The credentials provided are not for a ${selectedRole.replace('_', ' ')} account.`);
+                setIsSubmitting(false);
+                return;
+            }
+
+            login(data);
+        } catch (err) {
+            setError(err.response?.data?.message || "Authentication failed. Please check your credentials.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -36,6 +55,8 @@ const Login = ({ onLogin }) => {
                     <h2>Scheme Monitoring System</h2>
                     <p>Login to access your dashboard</p>
                 </div>
+
+                {error && <div className="login-error-alert slideUp">{error}</div>}
 
                 <form onSubmit={handleLogin} className="login-form">
                     <div className="role-selection">
@@ -58,13 +79,13 @@ const Login = ({ onLogin }) => {
                     </div>
 
                     <div className="form-group slideUp" style={{ animationDelay: '0.4s' }}>
-                        <label htmlFor="username">Username or ID</label>
+                        <label htmlFor="email">Email Address</label>
                         <input
-                            type="text"
-                            id="username"
-                            placeholder="Enter your registered ID"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            type="email"
+                            id="email"
+                            placeholder="officer@govt.in"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             required
                         />
                     </div>
@@ -84,10 +105,10 @@ const Login = ({ onLogin }) => {
                     <button
                         type="submit"
                         className="login-btn slideUp"
-                        disabled={!selectedRole || !username || !password}
+                        disabled={!selectedRole || !email || !password || isSubmitting}
                         style={{ animationDelay: '0.6s' }}
                     >
-                        Authenticate User
+                        {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : 'Authenticate User'}
                     </button>
                 </form>
             </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import StatusTable from '../../components/Tables/StatusTable';
 import ActionModal from '../../components/Modal/ActionModal';
 import { SkeletonTable } from '../../components/Loading/Skeletons';
-import { applications } from '../../data/dummyData';
+import api from '../../utils/api';
 import './Applications.css';
 
 const Applications = ({ role, searchTerm = '' }) => {
@@ -12,14 +12,27 @@ const Applications = ({ role, searchTerm = '' }) => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
 
-    // Simulate network load
-    useEffect(() => {
+    const fetchApplications = async () => {
         setIsLoading(true);
-        const timer = setTimeout(() => {
-            setData(applications);
+        try {
+            const { data } = await api.get('/applications');
+            const mappedData = data.map(app => ({
+                ...app,
+                id: app._id.slice(-6).toUpperCase(),
+                beneficiary: app.beneficiaryName,
+                scheme: app.schemeId?.schemeName || 'Unknown Scheme',
+                dateApplied: new Date(app.appliedDate).toLocaleDateString()
+            }));
+            setData(mappedData);
+        } catch (error) {
+            console.error("Error fetching applications:", error);
+        } finally {
             setIsLoading(false);
-        }, 800);
-        return () => clearTimeout(timer);
+        }
+    };
+
+    useEffect(() => {
+        fetchApplications();
     }, []);
 
     const columns = [
@@ -35,18 +48,19 @@ const Applications = ({ role, searchTerm = '' }) => {
     const getFilteredData = () => {
         let filtered = data;
 
-        // 1. Role Base Filtering
-        if (role === 'district') {
+        // Role Base Filtering (Frontend view safety)
+        if (role === 'district' || role === 'district_officer') {
             filtered = filtered.filter(app =>
                 app.status.includes('District Officer') ||
+                app.status === 'Pending Admin' ||
                 app.status === 'Approved' ||
                 app.status === 'Rejected'
             );
-        } else if (role === 'field') {
+        } else if (role === 'field' || role === 'field_officer') {
             filtered = filtered.filter(app => app.status.includes('Field Officer'));
         }
 
-        // 2. Dropdown Status Filter
+        // Dropdown Status Filter
         if (statusFilter !== 'all') {
             filtered = filtered.filter(app => {
                 const s = app.status.toLowerCase();
@@ -57,13 +71,13 @@ const Applications = ({ role, searchTerm = '' }) => {
             });
         }
 
-        // 3. Global Search Filter
+        // Global Search Filter
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             filtered = filtered.filter(app =>
                 app.beneficiary.toLowerCase().includes(term) ||
                 app.scheme.toLowerCase().includes(term) ||
-                app.id.toString().includes(term) ||
+                app.id.includes(term) ||
                 app.district.toLowerCase().includes(term)
             );
         }
@@ -76,28 +90,30 @@ const Applications = ({ role, searchTerm = '' }) => {
         setIsModalOpen(true);
     };
 
-    const handleApprove = (app, remarks) => {
-        let newStatus = '';
-
-        if (role === 'field') newStatus = 'Pending District Officer';
-        if (role === 'district') newStatus = 'Pending Admin Approval';
-        if (role === 'admin') newStatus = 'Approved';
-
-        updateApplicationStatus(app.id, newStatus);
-        setIsModalOpen(false);
+    const handleApprove = async (app, remark) => {
+        try {
+            await api.put(`/applications/${app._id}/approve`, {
+                action: 'approve',
+                remark
+            });
+            fetchApplications(); // Refresh list
+            setIsModalOpen(false);
+        } catch (error) {
+            alert(error.response?.data?.message || "Failed to approve application");
+        }
     };
 
-    const handleReject = (app, remarks) => {
-        updateApplicationStatus(app.id, 'Rejected');
-        setIsModalOpen(false);
-    };
-
-    const updateApplicationStatus = (id, newStatus) => {
-        setData(prevData =>
-            prevData.map(item =>
-                item.id === id ? { ...item, status: newStatus } : item
-            )
-        );
+    const handleReject = async (app, remark) => {
+        try {
+            await api.put(`/applications/${app._id}/approve`, {
+                action: 'reject',
+                remark
+            });
+            fetchApplications(); // Refresh list
+            setIsModalOpen(false);
+        } catch (error) {
+            alert(error.response?.data?.message || "Failed to reject application");
+        }
     };
 
     return (

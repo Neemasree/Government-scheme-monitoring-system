@@ -17,10 +17,10 @@ const StatCard = ({ title, value, icon, colorClass, delay = 0 }) => (
     </div>
 );
 
-const DashboardCards = ({ role, isLoading }) => {
+const DashboardCards = ({ role, isLoading, stats }) => {
     const iconSize = 24;
 
-    if (isLoading) {
+    if (isLoading || !stats) {
         return (
             <div className="dashboard-cards-grid">
                 <SkeletonCard />
@@ -31,25 +31,27 @@ const DashboardCards = ({ role, isLoading }) => {
         );
     }
 
+    const { totalSchemes, totalApplications, pendingApprovals, approvedCases } = stats;
+
     const adminCards = [
-        { title: "Total Schemes", value: "12", icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
-        { title: "Total Beneficiaries", value: "1.2M", icon: <Users size={iconSize} />, colorClass: "green-card", delay: 0.1 },
-        { title: "Pending Approvals", value: "450", icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
-        { title: "Fund Disbursed", value: "₹4.5k Cr", icon: <CheckCircle size={iconSize} />, colorClass: "purple-card", delay: 0.3 }
+        { title: "Total Schemes", value: totalSchemes, icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
+        { title: "Total Beneficiaries", value: totalApplications, icon: <Users size={iconSize} />, colorClass: "green-card", delay: 0.1 },
+        { title: "Pending Approvals", value: pendingApprovals, icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
+        { title: "Completed Cases", value: approvedCases, icon: <CheckCircle size={iconSize} />, colorClass: "purple-card", delay: 0.3 }
     ];
 
     const districtCards = [
-        { title: "Active Schemes", value: "8", icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
-        { title: "District Beneficiaries", value: "45K", icon: <Users size={iconSize} />, colorClass: "green-card", delay: 0.1 },
-        { title: "To Review", value: "125", icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
-        { title: "Approved (Month)", value: "890", icon: <CheckCircle size={iconSize} />, colorClass: "purple-card", delay: 0.3 }
+        { title: "Active Schemes", value: totalSchemes, icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
+        { title: "Applications", value: totalApplications, icon: <Users size={iconSize} />, colorClass: "green-card", delay: 0.1 },
+        { title: "To Review", value: pendingApprovals, icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
+        { title: "Approved Cases", value: approvedCases, icon: <CheckCircle size={iconSize} />, colorClass: "purple-card", delay: 0.3 }
     ];
 
     const fieldCards = [
-        { title: "Assigned Cases", value: "42", icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
-        { title: "Verified Today", value: "15", icon: <CheckCircle size={iconSize} />, colorClass: "green-card", delay: 0.1 },
-        { title: "Pending Verification", value: "27", icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
-        { title: "Rejections", value: "3", icon: <Users size={iconSize} />, colorClass: "red-card", delay: 0.3 }
+        { title: "Assigned Cases", value: totalApplications, icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
+        { title: "Total Approved", value: approvedCases, icon: <CheckCircle size={iconSize} />, colorClass: "green-card", delay: 0.1 },
+        { title: "To Verify", value: pendingApprovals, icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
+        { title: "Rejections", value: "0", icon: <Users size={iconSize} />, colorClass: "red-card", delay: 0.3 }
     ];
 
     let cardsToDisplay = adminCards;
