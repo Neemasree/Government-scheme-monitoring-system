@@ -21,22 +21,44 @@ const seedData = async () => {
         console.log('🗑️  Data Cleared...');
 
         // 1. Create Users
-        const salt = await bcrypt.genSalt(10);
-        const password = await bcrypt.hash('password123', salt);
-
-        const users = await User.insertMany([
-            { name: 'Admin User', email: 'admin@test.com', password, role: 'admin' },
-            { name: 'District Officer', email: 'district@test.com', password, role: 'district_officer' },
-            { name: 'Field Officer', email: 'field@test.com', password, role: 'field_officer' },
+        const users = await User.create([
+            { name: 'Admin', email: 'admin@test.com', password: 'Admin@123', role: 'admin' },
+            { name: 'District Officer', email: 'district@test.com', password: 'password123', role: 'district_officer', district: 'Salem' },
+            { name: 'Field Officer', email: 'field@test.com', password: 'password123', role: 'field_officer', district: 'Coimbatore' },
         ]);
 
-        console.log('👤 Users Seeded');
+        console.log('👤 Users Seeded:');
+        users.forEach(u => console.log(`   - ${u.name} (${u.role})`));
 
         // 2. Create Schemes
         const schemes = await Scheme.insertMany([
-            { schemeName: 'Farmer Subsidy 2024', description: 'Direct financial aid for organic farming', budget: 5000000, district: 'Coimbatore', createdBy: users[0]._id },
-            { schemeName: 'Rural Housing Fund', description: 'Housing loans for low income families', budget: 12000000, district: 'Salem', createdBy: users[0]._id },
-            { schemeName: 'Education Scholarship', description: 'Monthly stipend for higher studies', budget: 3000000, district: 'Chennai', createdBy: users[0]._id }
+            {
+                schemeName: 'Farmer Subsidy 2024',
+                description: 'Direct financial aid for organic farming',
+                budget: 5000000,
+                district: 'Coimbatore',
+                startDate: new Date('2024-01-01'),
+                endDate: new Date('2024-12-31'),
+                createdBy: users[0]._id
+            },
+            {
+                schemeName: 'Rural Housing Fund',
+                description: 'Housing loans for low income families',
+                budget: 12000000,
+                district: 'Salem',
+                startDate: new Date('2024-01-01'),
+                endDate: new Date('2024-12-31'),
+                createdBy: users[0]._id
+            },
+            {
+                schemeName: 'Education Scholarship',
+                description: 'Monthly stipend for higher studies',
+                budget: 3000000,
+                district: 'Chennai',
+                startDate: new Date('2024-01-01'),
+                endDate: new Date('2024-12-31'),
+                createdBy: users[0]._id
+            }
         ]);
 
         console.log('📋 Schemes Seeded');

@@ -6,19 +6,31 @@ import generateToken from '../utils/generateToken.js';
 // @access  Public
 const authUser = async (req, res) => {
     const { email, password } = req.body;
+    console.log('--- Auth Request Body ---');
+    console.log(req.body);
 
+    console.log(`🔍 Login Attempt: ${email}`);
     const user = await User.findOne({ email });
 
-    if (user && (await user.matchPassword(password))) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            district: user.district,
-            token: generateToken(user._id)
-        });
+    if (user) {
+        console.log(`✅ User found: ${user.email} | Role: ${user.role}`);
+        const isMatch = await user.matchPassword(password);
+        console.log(`🔑 Password Match: ${isMatch}`);
+
+        if (isMatch) {
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                district: user.district,
+                token: generateToken(user._id)
+            });
+        } else {
+            res.status(401).json({ message: 'Invalid email or password' });
+        }
     } else {
+        console.log(`❌ No user found with email: ${email}`);
         res.status(401).json({ message: 'Invalid email or password' });
     }
 };
