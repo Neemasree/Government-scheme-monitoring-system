@@ -6,10 +6,15 @@ import Scheme from '../models/Scheme.js';
 // @access  Private
 const getDashboardStats = async (req, res) => {
     try {
-        const totalSchemes = await Scheme.countDocuments();
-        const totalApplications = await Application.countDocuments();
-        const pendingApprovals = await Application.countDocuments({ status: { $regex: /Pending/ } });
-        const approvedCases = await Application.countDocuments({ status: 'Approved' });
+        let query = {};
+        if (req.user.role === 'district_officer') {
+            query.district = req.user.district;
+        }
+
+        const totalSchemes = await Scheme.countDocuments(query);
+        const totalApplications = await Application.countDocuments(query);
+        const pendingApprovals = await Application.countDocuments({ ...query, status: { $regex: /Pending/ } });
+        const approvedCases = await Application.countDocuments({ ...query, status: 'Approved' });
 
         res.json({
             totalSchemes,
@@ -28,14 +33,21 @@ const getDashboardStats = async (req, res) => {
 // @access  Private
 const getAnalytics = async (req, res) => {
     try {
+        let query = {};
+        if (req.user.role === 'district_officer') {
+            query.district = req.user.district;
+        }
+
         // 1. Status Distribution
         const statusData = await Application.aggregate([
+            { $match: query },
             { $group: { _id: "$status", value: { $sum: 1 } } },
             { $project: { name: "$_id", value: 1, _id: 0 } }
         ]);
 
         // 2. Scheme Distribution
         const schemeData = await Application.aggregate([
+            { $match: query },
             {
                 $lookup: {
                     from: 'schemes',
@@ -51,6 +63,7 @@ const getAnalytics = async (req, res) => {
 
         // 3. District Stats
         const districtStats = await Application.aggregate([
+            { $match: query },
             {
                 $group: {
                     _id: "$district",
@@ -74,7 +87,7 @@ const getAnalytics = async (req, res) => {
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
         const trendData = await Application.aggregate([
-            { $match: { appliedDate: { $gte: sixMonthsAgo } } },
+            { $match: { ...query, appliedDate: { $gte: sixMonthsAgo } } },
             {
                 $group: {
                     _id: {

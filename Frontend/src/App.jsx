@@ -8,8 +8,11 @@ import Schemes from './pages/Schemes/Schemes';
 import Applications from './pages/Applications/Applications';
 import Districts from './pages/Districts/Districts';
 import Reports from './pages/Reports/Reports';
+import Register from './pages/Register/Register';
+import Notifications from './pages/Notifications/Notifications';
 import { useAuth } from './context/AuthContext';
 import './index.css';
+
 
 // Protective Layout Wrapper
 const PortalLayout = ({ user, logout, onSearchItem, children }) => {
@@ -56,7 +59,9 @@ const App = () => {
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
+        <Route path="/register" element={<Register />} />
         <Route path="/login" element={
+
           user ? <Navigate to={`/${user.role === 'district_officer' ? 'district' : user.role === 'field_officer' ? 'field' : 'admin'}/dashboard`} replace /> : <Login />
         } />
 
@@ -69,6 +74,7 @@ const App = () => {
               <Route path="applications" element={<Applications role="admin" searchTerm={globalSearch} />} />
               <Route path="districts" element={<Districts role="admin" />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </PortalLayout>
@@ -81,6 +87,7 @@ const App = () => {
               <Route path="dashboard" element={<Dashboard role="district" username={user?.name} />} />
               <Route path="schemes" element={<Schemes role="district" searchTerm={globalSearch} />} />
               <Route path="applications" element={<Applications role="district" searchTerm={globalSearch} />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </PortalLayout>
@@ -93,6 +100,7 @@ const App = () => {
               <Route path="dashboard" element={<Dashboard role="field" username={user?.name} />} />
               <Route path="schemes" element={<Schemes role="field" searchTerm={globalSearch} />} />
               <Route path="applications" element={<Applications role="field" searchTerm={globalSearch} />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </PortalLayout>

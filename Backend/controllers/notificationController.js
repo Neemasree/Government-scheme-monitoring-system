@@ -5,11 +5,13 @@ import Notification from '../models/Notification.js';
 // @access  Private
 const getNotifications = async (req, res) => {
     try {
+        const limit = req.query.limit ? parseInt(req.query.limit) : 20;
         const notifications = await Notification.find({ userId: req.user._id })
             .sort({ createdAt: -1 })
-            .limit(20);
+            .limit(limit);
         res.json(notifications);
     } catch (error) {
+
         console.error('❌ Error in getNotifications:', error);
         res.status(500).json({ message: 'Error fetching notifications' });
     }

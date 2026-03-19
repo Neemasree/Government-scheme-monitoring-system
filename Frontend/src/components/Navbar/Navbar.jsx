@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Search, User, CheckCircle, FileText, X, AlertTriangle, Info } from 'lucide-react';
 import api from '../../utils/api';
 import './Navbar.css';
@@ -8,6 +9,7 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [notifications, setNotifications] = useState([]);
     const notifRef = useRef(null);
+    const navigate = useNavigate();
 
     // Fetch Notifications
     useEffect(() => {
@@ -135,7 +137,15 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
                                 )}
                             </div>
                             <div className="notif-footer">
-                                <button className="view-all-btn">View All Notifications</button>
+                                <button 
+                                    className="view-all-btn"
+                                    onClick={() => {
+                                        navigate(`/${role}/notifications`);
+                                        setShowNotifications(false);
+                                    }}
+                                >
+                                    View All Notifications
+                                </button>
                             </div>
                         </div>
                     )}

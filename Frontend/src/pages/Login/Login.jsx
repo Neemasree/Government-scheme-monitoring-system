@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { Shield, Map, CheckSquare, Loader2 } from 'lucide-react';
@@ -10,6 +11,14 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.message) {
+            setSuccessMessage(location.state.message);
+        }
+    }, [location]);
 
     const { login } = useAuth();
 
@@ -57,6 +66,8 @@ const Login = () => {
                 </div>
 
                 {error && <div className="login-error-alert slideUp">{error}</div>}
+                {successMessage && <div className="login-success-alert slideUp">{successMessage}</div>}
+
 
                 <form onSubmit={handleLogin} className="login-form">
                     <div className="role-selection">
@@ -110,7 +121,12 @@ const Login = () => {
                     >
                         {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : 'Authenticate User'}
                     </button>
+
+                    <div className="login-footer slideUp" style={{ animationDelay: '0.7s' }}>
+                        <p>New officer? <Link to="/register">Register here</Link></p>
+                    </div>
                 </form>
+
             </div>
         </div>
     );

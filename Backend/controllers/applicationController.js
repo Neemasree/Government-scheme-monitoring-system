@@ -25,9 +25,17 @@ const createApplication = async (req, res) => {
 // @route   GET /api/applications
 // @access  Private
 const getApplications = async (req, res) => {
-    const applications = await Application.find({}).populate('schemeId', 'schemeName');
+    let query = {};
+    
+    // Filter by district for District Officers
+    if (req.user.role === 'district_officer') {
+        query.district = req.user.district;
+    }
+
+    const applications = await Application.find(query).populate('schemeId', 'schemeName');
     res.json(applications);
 };
+
 
 // @desc    Update application status (Approval flow)
 // @route   PUT /api/applications/:id/approve

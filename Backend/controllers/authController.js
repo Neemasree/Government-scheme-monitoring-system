@@ -1,4 +1,8 @@
+import User from '../models/User.js';
+import generateToken from '../utils/generateToken.js';
+
 const authUser = async (req, res) => {
+
     const { email, password } = req.body;
 
     console.log(`🔍 Login Attempt: ${email}`);

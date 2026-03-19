@@ -1,4 +1,4 @@
-import { X, Check, XCircle } from 'lucide-react';
+import { X, Check, XCircle, Clock, MessageSquare } from 'lucide-react';
 import StatusBadge from '../Badge/StatusBadge';
 import './ActionModal.css';
 import { useState } from 'react';
@@ -88,6 +88,28 @@ const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role }) => {
                                     onChange={(e) => setRemarks(e.target.value)}
                                     rows={3}
                                 ></textarea>
+                            </div>
+                        </div>
+                    )}
+
+                    {data.remarks && data.remarks.length > 0 && (
+                        <div className="remarks-history-section">
+                            <h3 className="section-title">Remarks History</h3>
+                            <div className="remarks-list">
+                                {data.remarks.map((rem, idx) => (
+                                    <div key={idx} className="remark-item glass-card">
+                                        <div className="remark-header">
+                                            <span className={`role-tag ${rem.role}`}>{rem.role.replace('_', ' ')}</span>
+                                            <span className="remark-date">
+                                                <Clock size={12} /> {new Date(rem.date).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <p className="remark-text">
+                                            <MessageSquare size={14} className="quote-icon" />
+                                            {rem.text}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

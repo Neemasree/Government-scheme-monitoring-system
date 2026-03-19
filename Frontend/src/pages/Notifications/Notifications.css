@@ -1,0 +1,116 @@
+.notifications-page {
+    padding: 32px 0;
+}
+
+.notifications-container {
+    margin-top: 32px;
+}
+
+.notif-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.notif-card {
+    display: flex;
+    padding: 24px;
+    gap: 20px;
+    align-items: flex-start;
+    transition: all 0.2s ease;
+    cursor: default;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.notif-card.unread {
+    background-color: rgba(59, 130, 246, 0.03);
+    border-color: rgba(59, 130, 246, 0.2);
+    cursor: pointer;
+}
+
+.notif-card:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary-light);
+}
+
+.notif-card-icon {
+    padding: 12px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notif-card-content {
+    flex: 1;
+}
+
+.notif-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.notif-card-header h3 {
+    font-size: 17px;
+    color: var(--text-dark);
+}
+
+.notif-date {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.notif-message {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.unread-pulse {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 10px;
+    height: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--primary-light);
+}
+
+.notif-empty-state {
+    padding: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+}
+
+.notif-empty-state h3 {
+    font-size: 20px;
+    color: var(--text-dark);
+}
+
+.notif-empty-state p {
+    color: var(--text-muted);
+}
+
+.notif-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    gap: 20px;
+    color: var(--text-muted);
+}
